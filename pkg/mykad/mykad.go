@@ -13,6 +13,7 @@ const minAge = 12
 const maxAge = 112 // Based off guinness world record.
 
 // Generate will return a new random MyKAD number.
+// TODO: This may break validate.
 func Generate() string {
 	// Generate a random date for the year component.
 	n := time.Now()
