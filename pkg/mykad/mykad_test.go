@@ -2,6 +2,7 @@ package mykad
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -24,6 +25,28 @@ func TestGenerate(t *testing.T) {
 				res := Generate()
 				fmt.Println("Result ", res)
 			}
+		})
+	}
+}
+
+func TestVerify(t *testing.T) {
+	tests := []struct {
+		name        string
+		mykad       string
+		expectError bool
+	}{
+		{"Valid mykad", "840701-79-3686", false},
+		{"Invalid mykad - wrong date", "0701-79-3686", true},
+		{"Invalid mykad - invalid place of birth", "840701-69-3686", true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := Validate(test.mykad)
+			if test.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
 		})
 	}
 }
