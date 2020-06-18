@@ -23,13 +23,16 @@ func TestGenerate(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			for i := 0; i < test.sampleSize; i++ {
 				res := Generate()
-				fmt.Println("Result ", res)
+				fmt.Printf("%v\n", res)
+				myKAD, err := NewMyKAD(res)
+				require.NoError(t, err)
+				fmt.Printf("%v\n", myKAD)
 			}
 		})
 	}
 }
 
-func TestVerify(t *testing.T) {
+func TestValidate(t *testing.T) {
 	tests := []struct {
 		name        string
 		mykad       string

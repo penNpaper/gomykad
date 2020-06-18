@@ -1,7 +1,16 @@
 package mykad
 
+import (
+	"errors"
+	"fmt"
+	"regexp"
+	"strconv"
+	"time"
+)
+
 // All place of birth mappings are obtained from https://en.wikipedia.org/wiki/Malaysian_identity_card#Place_of_birth
 
+// TODO(shiraaz): This was copy pasted from somwhere and needs to be cleaned up.
 const REGION_SOUTHEAST_ASIA = "SOUTHEAST_ASIA"
 const REGION_BRITISH_ISLES = "BRITISH_ISLES"
 const REGION_SOVIET_REPUBLIC = "SOVIET_REPUBLIC"
@@ -21,6 +30,7 @@ type region struct {
 	region  string
 }
 
+// TODO(shiraaz): This was copy pasted from somwhere and needs to be cleaned up.
 var countryCodePairs = map[string]region{
 	"60": {country: "BN", region: REGION_SOUTHEAST_ASIA},
 	"61": {country: "ID", region: REGION_SOUTHEAST_ASIA},
@@ -83,4 +93,88 @@ var countryCodePairs = map[string]region{
 
 	"98": {country: "STATELESS", region: ""},
 	"99": {country: "UNSPECIFIED", region: ""},
+}
+
+type PlaceOfBirth struct {
+	CountryISO string
+	Location   string
+}
+
+type CitizenType int
+
+const (
+	CitizenTypeMalaysian CitizenType = 1
+	CitizenTypeForeigner CitizenType = 2
+)
+
+type Gender int
+
+const (
+	GenderMale   Gender = 1
+	GenderFemale Gender = 2
+)
+
+type MyKAD struct {
+	NRIC         string
+	DateOfBirth  time.Time
+	PlaceOfBirth PlaceOfBirth
+	Gender       Gender
+	CitizenType  CitizenType
+}
+
+// NewMyKAD returns a new malaysian identity from a provided NRIC number.
+func NewMyKAD(nric string) (*MyKAD, error) {
+	r := regexp.MustCompile(`^(\d{6})-?(\d{2})-?(\d{3})(\d{1})$`)
+	s := r.FindStringSubmatch(nric)
+
+	if len(s) != 5 {
+		return nil, errors.New("invalid mykad number")
+	}
+
+	dob, err := time.Parse("060102", s[1])
+	if err != nil {
+		return nil, fmt.Errorf("error parsing date: %v", err)
+	}
+
+	pob, err := strconv.Atoi(s[2])
+	if err != nil {
+		return nil, fmt.Errorf("error parsing location: %v", err)
+	}
+
+	// TODO: This should go into a isMalaysian and isForeigner check.
+	var c CitizenType
+	var pb PlaceOfBirth
+	if (pob > 1 && pob < 17) || (pob > 20 && pob < 60) {
+		c = CitizenTypeMalaysian
+		pb = PlaceOfBirth{
+			CountryISO: "MY",
+			Location:   "",
+		}
+	} else if p, ok := countryCodePairs[s[2]]; ok {
+		c = CitizenTypeForeigner
+		pb = PlaceOfBirth{
+			CountryISO: p.country,
+			Location:   p.region,
+		}
+	} else {
+		return nil, errors.New("invalid location")
+	}
+
+	gender := GenderMale
+	g, err := strconv.Atoi(s[2])
+	if err != nil {
+		return nil, fmt.Errorf("error parsing gender: %v", err)
+	}
+
+	if g%2 == 0 {
+		gender = GenderFemale
+	}
+
+	return &MyKAD{
+		NRIC:         nric,
+		DateOfBirth:  dob,
+		PlaceOfBirth: pb,
+		CitizenType:  c,
+		Gender:       gender,
+	}, nil
 }
