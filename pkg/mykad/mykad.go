@@ -12,7 +12,8 @@ import (
 const minAge = 12
 const maxAge = 112 // Based off guinness world record.
 
-// NewMyKAD returns a new malaysian identity from a provided NRIC number.
+// NewMyKAD returns a new malaysian identity from a provided NRIC number. The NRIC number can be in formatted or
+// unformatted (no dash) format.
 func NewMyKAD(nric string) (*MyKAD, error) {
 	s := decodeNRIC(nric)
 	if len(s) != 4 {
@@ -73,6 +74,7 @@ func NewMyKAD(nric string) (*MyKAD, error) {
 	}, nil
 }
 
+// decodeNRIC is a utility function that returns a split NRIC string.
 func decodeNRIC(nric string) []string {
 	// Try without dashes.
 	if len(nric) == 12 {
