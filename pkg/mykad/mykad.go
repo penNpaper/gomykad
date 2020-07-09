@@ -43,14 +43,14 @@ func NewMyKAD(nric string) (*MyKAD, error) {
 	if pobc.isMalaysianCode() {
 		c = CitizenTypeMalaysian
 		pb = PlaceOfBirth{
-			PossibleCountry: "Malaysia",
-			Location: re,
+			Country:  "Malaysia",
+			Province: re,
 		}
 	} else if pobc.isForeignerCode() {
 		c = CitizenTypeForeigner
 		pb = PlaceOfBirth{
-			PossibleCountry: re,
-			Location: "",
+			Country:  re,
+			Province: "",
 		}
 	}
 
@@ -100,7 +100,7 @@ func Generate() string {
 
 	// Generate a random place.
 	var p placeOfBirthCode
-	for !p.valid(){
+	for !p.valid() {
 		p = placeOfBirthCode(rand.Intn(99))
 	}
 

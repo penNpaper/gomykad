@@ -6,8 +6,11 @@ import (
 
 // PlaceOfBirth represents the literal place of birth of the MyKAD holder.
 type PlaceOfBirth struct {
-	PossibleCountry string
-	Location        string
+	// Country is the possible list of countries that the MyKAD holder could originate from.
+	Country string
+
+	// Province is the possible
+	Province string
 }
 
 // CitizenType is the citizenship that the MyKAD holder holds in Malaysia.
@@ -26,7 +29,7 @@ type Gender int
 
 const (
 	// GenderMale is a male.
-	GenderMale   Gender = 1
+	GenderMale Gender = 1
 
 	// GenderFemale is a female.
 	GenderFemale Gender = 2
