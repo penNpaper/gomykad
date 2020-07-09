@@ -16,12 +16,12 @@ To import the package use:
 You can represent a MyKAD using a formatted or unformatted NRIC number. A represented MyKAD number can be assumed to 
 be validated.
 
-## Unformatted NRIC
+## Formatted NRIC
 ```go
 m, err := NewMyKAD("721212-24-3221")
 ```
 
-## Formatted NRIC
+## Unformatted NRIC
 ```go
 m, err := NewMyKAD("721212243221")
 ```
