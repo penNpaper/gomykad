@@ -9,7 +9,7 @@ A package to generate, validate and represent Malaysian Identity Card (MyKAD) nu
 # Import
 To import the package use:
 ```
- go get github.com/ShiraazMoollatjie/gomykad
+ go get github.com/ShiraazMoollatjie/gomykad/pkg/mykad
 ```
 
 # Representation
