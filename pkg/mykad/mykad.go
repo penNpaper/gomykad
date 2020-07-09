@@ -1,16 +1,90 @@
 package mykad
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
+	"regexp"
+	"strconv"
 	"time"
 )
 
 const minAge = 12
 const maxAge = 112 // Based off guinness world record.
 
+// NewMyKAD returns a new malaysian identity from a provided NRIC number.
+func NewMyKAD(nric string) (*MyKAD, error) {
+	s := decodeNRIC(nric)
+	if len(s) != 4 {
+		return nil, errors.New("invalid mykad number")
+	}
+
+	// Parse date of birth.
+	dob, err := time.Parse("060102", s[0])
+	if err != nil {
+		return nil, fmt.Errorf("error parsing date: %v", err)
+	}
+
+	// Parse place of birth.
+	pob, err := strconv.Atoi(s[1])
+	if err != nil {
+		return nil, fmt.Errorf("error parsing location: %v", err)
+	}
+
+	var c CitizenType
+	var pb PlaceOfBirth
+	pobc := placeOfBirthCode(pob)
+	if !pobc.valid() {
+		return nil, errors.New("invalid place of birth")
+	}
+
+	re := regions[pobc]
+	if pobc.isMalaysianCode() {
+		c = CitizenTypeMalaysian
+		pb = PlaceOfBirth{
+			PossibleCountry: "Malaysia",
+			Location: re,
+		}
+	} else if pobc.isForeignerCode() {
+		c = CitizenTypeForeigner
+		pb = PlaceOfBirth{
+			PossibleCountry: re,
+			Location: "",
+		}
+	}
+
+	// Parse gender.
+	gender := GenderMale
+	g, err := strconv.Atoi(s[3])
+	if err != nil {
+		return nil, fmt.Errorf("error parsing gender: %v", err)
+	}
+
+	if g%2 == 0 {
+		gender = GenderFemale
+	}
+
+	return &MyKAD{
+		NRIC:         nric,
+		DateOfBirth:  dob,
+		PlaceOfBirth: pb,
+		CitizenType:  c,
+		Gender:       gender,
+	}, nil
+}
+
+func decodeNRIC(nric string) []string {
+	// Try without dashes.
+	if len(nric) == 12 {
+		return []string{nric[0:6], nric[6:8], nric[8:11], nric[11:]}
+	}
+
+	// Try with dashes.
+	r := regexp.MustCompile(`^(\d{6})-?(\d{2})-?(\d{3})(\d{1})$`)
+	return r.FindStringSubmatch(nric)[1:]
+}
+
 // Generate will return a new random MyKAD number.
-// TODO: This may break validate.
 func Generate() string {
 	// Generate a random date for the year component.
 	n := time.Now()
@@ -23,10 +97,9 @@ func Generate() string {
 	ds := time.Unix(sec, 0).Format("060102")
 
 	// Generate a random place.
-	var p int
-	// TODO(shiraaz): Simplify
-	for p == 0 || (p > 16 && p < 21) || (p > 68 && p < 71) || p == 73 || (p > 79 && p < 82) || (p > 93 && p < 98) {
-		p = rand.Intn(99)
+	var p placeOfBirthCode
+	for !p.valid(){
+		p = placeOfBirthCode(rand.Intn(99))
 	}
 
 	// Generate a special number.
